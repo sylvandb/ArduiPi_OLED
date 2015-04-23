@@ -45,15 +45,18 @@ bcm2835.o: bcm2835.c
 	gcc -Wall -fPIC ${CCFLAGS} -c $^
 
 # Install the library to LIBPATH
-install: 
+install: install_headers install_library
+
+install_library:
 	@echo "[Install Library]"
 	@if ( test ! -d $(PREFIX)/lib ) ; then mkdir -p $(PREFIX)/lib ; fi
 	@install -m 0755 ${LIBNAME} ${LIBDIR}
 	@ln -sf ${LIBDIR}/${LIBNAME} ${LIBDIR}/${LIB}.so.1
 	@ln -sf ${LIBDIR}/${LIBNAME} ${LIBDIR}/${LIB}.so
-	@ldconfig
 	@rm -rf ${LIB}.*
+	@ldconfig
 
+install_headers:
 	@echo "[Install Headers]"
 	@if ( test ! -d $(PREFIX)/include ) ; then mkdir -p $(PREFIX)/include ; fi
 	@cp -f  Adafruit_*.h $(PREFIX)/include
