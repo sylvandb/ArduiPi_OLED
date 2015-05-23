@@ -23,7 +23,8 @@
 #ifndef _ADAFRUIT_GFX_H
 #define _ADAFRUIT_GFX_H
 
-#define swap(a, b) { int16_t t = a; a = b; b = t; }
+//#define swap(a, b) { int16_t t = a; a = b; b = t; }
+#define swap(a, b) { a^=b; b^=a; a^=b; }
 
 //class Adafruit_GFX : public Print {
 class Adafruit_GFX {
