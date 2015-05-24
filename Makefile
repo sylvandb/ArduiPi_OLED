@@ -23,15 +23,19 @@ LIB=libArduiPi_OLED
 # shared library name
 LIBNAME=$(LIB).so.1.0
 
+
 # The recommended compiler flags for the Raspberry Pi
 CCFLAGS=-Ofast -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s
 
+
 # make all
 # reinstall the library after each recompilation
-all: ArduiPi_OLED install
-library: ArduiPi_OLED
+all: library install
+
 
 # Make the library
+library: ArduiPi_OLED
+
 ArduiPi_OLED: ArduiPi_OLED.o Adafruit_GFX.o bcm2835.o 
 	g++ -shared -Wl,-soname,$@.so.1 ${CCFLAGS}  -o ${LIBNAME} $^
 
@@ -45,6 +49,7 @@ Adafruit_GFX.o: Adafruit_GFX.cpp
 bcm2835.o: bcm2835.c
 	gcc -Wall -fPIC ${CCFLAGS} -c $^
 
+
 # Install the library to LIBPATH
 install: install_headers install_library
 
@@ -52,9 +57,8 @@ install_library:
 	@echo "[Install Library]"
 	@if ( test ! -d $(PREFIX)/lib ) ; then mkdir -p $(PREFIX)/lib ; fi
 	@install -m 0755 ${LIBNAME} ${LIBDIR}
-	@ln -sf ${LIBDIR}/${LIBNAME} ${LIBDIR}/${LIB}.so.1
-	@ln -sf ${LIBDIR}/${LIBNAME} ${LIBDIR}/${LIB}.so
-	@rm -rf ${LIB}.*
+	@ln -sf ${LIBNAME} ${LIBDIR}/${LIB}.so.1
+	@ln -sf ${LIBNAME} ${LIBDIR}/${LIB}.so
 	@ldconfig
 
 install_headers:
@@ -74,8 +78,9 @@ uninstall:
 	@rm -rf  $(PREFIX)/include/ArduiPi_OLED*
 	@rm -rf  $(PREFIX)/include/bcm2835.h
 	
+
 # clear build files
 clean:
-	rm -rf *.o ${LIB}.* ${LIBDIR}/${LIB}.*
+	rm -rf *.o ${LIB}.*
 
 
