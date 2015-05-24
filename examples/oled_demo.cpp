@@ -24,14 +24,20 @@ All text above, and the splash screen must be included in any redistribution
 						
 *********************************************************************/
 
-#include "ArduiPi_OLED_lib.h"
-#include "Adafruit_GFX.h"
-#include "ArduiPi_OLED.h"
-
+#include <stdio.h>
+#include <unistd.h>
 #include <getopt.h>
+
+#include "ArduiPi_OLED.h"
 
 #define PRG_NAME        "oled_demo"
 #define PRG_VERSION     "1.1"
+
+
+// GCC Missing
+#define max(a,b) ((a)>(b)?(a):(b))
+#define min(a,b) ((a)<(b)?(a):(b))
+
 
 // Instantiate the display
 ArduiPi_OLED display;

@@ -23,6 +23,13 @@
 #ifndef _ADAFRUIT_GFX_H
 #define _ADAFRUIT_GFX_H
 
+#include <stdlib.h>
+#include <stdint.h>
+
+
+// Arduino Compatible type
+typedef unsigned boolean;
+
 #define swap(a, b) { int16_t t = a; a = b; b = t; }
 //#define swap(a, b) { a^=b; b^=a; a^=b; }
 

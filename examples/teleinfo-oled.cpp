@@ -30,8 +30,6 @@ Comments: some code grabbed from picocom and other from teleinfo
 #include <netinet/in.h>
 #include <getopt.h>
 
-#include "ArduiPi_OLED_lib.h"
-#include "Adafruit_GFX.h"
 #include "ArduiPi_OLED.h"
 
 // ----------------

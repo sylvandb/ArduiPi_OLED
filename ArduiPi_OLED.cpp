@@ -33,15 +33,31 @@ All text above, and the splash screen below must be included in any redistributi
             
 *********************************************************************/
 
-#include "./ArduiPi_OLED_lib.h" 
-#include "./Adafruit_GFX.h"
+#include <string.h>
+#include <unistd.h>
+
 #include "./ArduiPi_OLED.h"
 
-#include "./seedfont.c"
+
+#include "bcm2835.h"
+
+// Default Configuration Pins for ArduiPi board
+#define DEF_I2C_RESET RPI_V2_GPIO_P1_22 /* GPIO 25 pin 22  */
+#define DEF_SPI_RESET RPI_V2_GPIO_P1_22 /* GPIO 25 pin 22  */
+#define DEF_SPI_DC    RPI_V2_GPIO_P1_18 /* GPIO 24 pin 18  */
+#define DEF_SPI_CS    BCM2835_SPI_CS0   /* Default Chip Select CE0 */
+#define ALT_SPI_CS    BCM2835_SPI_CS1   /* Alternate Chip Select CE1 */
+
 
 
 const char * oled_type_str[] = OLED_TYPE_STRINGS;
 
+
+#include "./seedfont.c"
+
+
+// Arduino Compatible Macro
+#define _BV(bit) (1 << (bit))
 
 
 inline boolean ArduiPi_OLED::isSPI(void) {
@@ -134,9 +150,9 @@ ArduiPi_OLED::ArduiPi_OLED()
 {
   // Init all var, and clean
   // Command I/O
-  rst = 0 ;
-  dc  = 0 ;
-  cs =  0 ;
+  rst = -1;
+  dc  = -1;
+  cs  = -1;
   
   // Lcd size
   oled_width  = 0;
@@ -250,9 +266,10 @@ boolean ArduiPi_OLED::select_oled(uint8_t OLED_TYPE)
 //
 boolean ArduiPi_OLED::init(int8_t DC, int8_t RST, int8_t CS, uint8_t OLED_TYPE) 
 {
-  rst = RST;  // Reset Pin
-  dc = DC;    // Data / command Pin
-  cs = CS ;   // Raspberry SPI chip Enable (may be CE0 or CE1)
+  rst = RST==OLED_PIN_DEFAULT ? DEF_SPI_RESET : RST;  // Reset Pin
+  dc  = DC ==OLED_PIN_DEFAULT ? DEF_SPI_DC    : DC;   // Data / command Pin
+  cs  = CS ==OLED_PIN_DEFAULT ? DEF_SPI_CS    : (
+        CS ==OLED_CS_ALTERNATE ? ALT_SPI_CS   : CS);  // Raspberry SPI chip Enable (may be CE0 or CE1)
   
   // Select OLED parameters
   if (!select_oled(OLED_TYPE))
@@ -270,7 +287,8 @@ boolean ArduiPi_OLED::init(int8_t DC, int8_t RST, int8_t CS, uint8_t OLED_TYPE)
   bcm2835_gpio_fsel(dc, BCM2835_GPIO_FSEL_OUTP);
 
   // Setup reset pin direction as output
-  bcm2835_gpio_fsel(rst, BCM2835_GPIO_FSEL_OUTP);
+  if (rst >= 0)
+    bcm2835_gpio_fsel(rst, BCM2835_GPIO_FSEL_OUTP);
 
   return ( true);
 }
@@ -279,7 +297,7 @@ boolean ArduiPi_OLED::init(int8_t DC, int8_t RST, int8_t CS, uint8_t OLED_TYPE)
 boolean ArduiPi_OLED::init(int8_t RST, uint8_t OLED_TYPE) 
 {
   dc = cs = -1; // DC and chip Select do not exist in I2C
-  rst = RST;
+  rst = RST==OLED_PIN_DEFAULT ? DEF_I2C_RESET : RST;  // Reset Pin
 
   // Select OLED parameters
   if (!select_oled(OLED_TYPE))
@@ -294,9 +312,11 @@ boolean ArduiPi_OLED::init(int8_t RST, uint8_t OLED_TYPE)
   // Set clock to 400 KHz
   // does not seem to work, will check this later
   // bcm2835_i2c_set_baudrate(400000);
+  bcm2835_i2c_set_baudrate(400000);
 
   // Setup reset pin direction as output
-  bcm2835_gpio_fsel(rst, BCM2835_GPIO_FSEL_OUTP);
+  if (rst >= 0)
+    bcm2835_gpio_fsel(rst, BCM2835_GPIO_FSEL_OUTP);
   
   return ( true);
 }
@@ -333,20 +353,23 @@ void ArduiPi_OLED::begin( void )
   constructor(oled_width, oled_height);
 
   // Setup reset pin direction (used by both SPI and I2C)  
-  bcm2835_gpio_fsel(rst, BCM2835_GPIO_FSEL_OUTP);
-  bcm2835_gpio_write(rst, HIGH);
-  
-  // VDD (3.3V) goes high at start, lets just chill for a ms
-  usleep(1000);
-  
-  // bring reset low
-  bcm2835_gpio_write(rst, LOW);
-  
-  // wait 10ms
-  usleep(10000);
-  
-  // bring out of reset
-  bcm2835_gpio_write(rst, HIGH);
+  if (rst >= 0)
+  {
+    bcm2835_gpio_fsel(rst, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_write(rst, HIGH);
+
+    // VDD (3.3V) goes high at start, lets just chill for a ms
+    usleep(1000);
+
+    // bring reset low
+    bcm2835_gpio_write(rst, LOW);
+
+    // wait 10ms
+    usleep(10000);
+
+    // bring out of reset
+    bcm2835_gpio_write(rst, HIGH);
+  }
   
   // depends on OLED type configuration
   if (oled_height == 32)

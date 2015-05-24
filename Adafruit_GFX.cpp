@@ -23,8 +23,11 @@
 
  ******************************************************************/
 
-#include "./ArduiPi_OLED_lib.h"
 #include "./Adafruit_GFX.h"
+
+#include <stdio.h>
+#include <stdarg.h>
+
 #include "./glcdfont.c"
 
 void Adafruit_GFX::constructor(int16_t w, int16_t h) 
@@ -44,33 +47,22 @@ void Adafruit_GFX::printf( const char * format, ...)
 {
 
   char buffer[64];
-	char * p = buffer;
-	int n;
+  int n;
   va_list args;
   va_start (args, format);
-  vsnprintf (buffer, sizeof(buffer)-1, format, args);
-	n = strlen(buffer);
-		
-	while (*p != 0 && n-->0)
-	{
-		write ( (uint8_t) *p++);
-	}
-
+  n = vsnprintf (buffer, sizeof(buffer), format, args);
   va_end (args);
+  if (n > 0) // &&  n < sizeof(buffer))
+    print(buffer);
 }
 
 // the print function
 void Adafruit_GFX::print( const char * string) 
 {
-
-	const char * p = string;
-	int n = strlen(string);
-	
-	while (*p != 0 && n-->0)
+	while (*string)
 	{
-		write ( (uint8_t) *p++);
+		write ( (uint8_t) *string++);
 	}
-
 }
 
 
@@ -479,7 +471,7 @@ size_t Adafruit_GFX::write(uint8_t c)
   } 
 	else if (c == '\r') 
 	{
-    // skip em
+    cursor_x = 0;
   } 
 	else 
 	{
@@ -495,6 +487,7 @@ size_t Adafruit_GFX::write(uint8_t c)
   return 1;
 }
 
+
 // draw a character
 void Adafruit_GFX::drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size) 
 {
@@ -505,35 +498,28 @@ void Adafruit_GFX::drawChar(int16_t x, int16_t y, unsigned char c, uint16_t colo
      ((y + 8 * size - 1) < 0))   // Clip top
     return;
 
-  for (int8_t i=0; i<6; i++ ) 
-	{
-    uint8_t line;
-    if (i == 5) 
-      line = 0x0;
-    else 
-      //line = pgm_read_byte(font+(c*5)+i);
-      line = font[(c*5)+i];
-    for (int8_t j = 0; j<8; j++) 
-		{
-      if (line & 0x1) 
-			{
+  for (int8_t i=0; i<6; i++) // 6 columns to leave a blank line between chars
+  {
+    int16_t xi = x+i*size;
+    uint8_t line = i>4 ? 0x0 : font[(c*5)+i];
+
+    for (int8_t j=0; j<8; j++)
+    {
+      if (line & 0x1) // draw color (foreground)
+      {
         if (size == 1) // default size
-          drawPixel(x+i, y+j, color);
-        else 
-				{  // big size
-          fillRect(x+(i*size), y+(j*size), size, size, color);
-				} 
+          drawPixel(xi, y+j, color);
+        else // big size
+          fillRect(xi, y+(j*size), size, size, color);
       } 
-			else if (bg != color) 
-			{
+      else if (bg != color)  // draw background
+      {
         if (size == 1) // default size
-          drawPixel(x+i, y+j, bg);
-        else 
-				{  // big size
-          fillRect(x+i*size, y+j*size, size, size, bg);
-        } 	
+          drawPixel(xi, y+j, bg);
+        else // big size
+          fillRect(xi, y+j*size, size, size, bg);
       }
-			
+
       line >>= 1;
     }
   }
