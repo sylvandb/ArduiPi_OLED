@@ -53,7 +53,9 @@ All text above, and the splash screen below must be included in any redistributi
 const char * oled_type_str[] = OLED_TYPE_STRINGS;
 
 
+#ifdef SEEED_I2C
 #include "./seedfont.c"
+#endif
 
 
 // Arduino Compatible Macro
@@ -84,7 +86,6 @@ inline void ArduiPi_OLED::fastI2Cwrite(char* tbuf, uint32_t len) {
 void ArduiPi_OLED::drawPixel(int16_t x, int16_t y, uint16_t color) 
 {
   uint8_t * p = poledbuff ;
-  uint8_t c;
   
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height()))
     return;
@@ -109,8 +110,11 @@ void ArduiPi_OLED::drawPixel(int16_t x, int16_t y, uint16_t color)
     break;
   }  
 */
+#ifdef SEEED_I2C
   if (oled_type == OLED_SEEED_I2C_96x96 )
   {
+    uint8_t c;
+
     // Get where to do the change in the buffer
     p = poledbuff + (x + (y/2)*oled_width );
     
@@ -133,6 +137,7 @@ void ArduiPi_OLED::drawPixel(int16_t x, int16_t y, uint16_t color)
     *p = c; 
   }
   else
+#endif // SEEED
   {
     // Get where to do the change in the buffer
     p = poledbuff + (x + (y/8)*oled_width );
@@ -214,6 +219,7 @@ boolean ArduiPi_OLED::select_oled(uint8_t OLED_TYPE)
       _i2c_addr = ADAFRUIT_I2C_ADDRESS;
     break;
     
+#ifdef SEEED_I2C
     case OLED_SEEED_I2C_128x64:
       _i2c_addr = SEEED_I2C_ADDRESS ;
       vcc_type = SSD_External_Vcc;
@@ -224,6 +230,7 @@ boolean ArduiPi_OLED::select_oled(uint8_t OLED_TYPE)
       oled_height = 96;
       _i2c_addr = SEEED_I2C_ADDRESS ;
     break;
+#endif
     
     case OLED_SH1106_I2C_128x64:
       _i2c_addr = SH1106_I2C_ADDRESS;
@@ -239,9 +246,11 @@ boolean ArduiPi_OLED::select_oled(uint8_t OLED_TYPE)
   // execpt for 96x96 seed, 1 pixel is 1 nible
   oled_buff_size = oled_width * oled_height ;
   
+#ifdef SEEED_I2C
   if ( OLED_TYPE == OLED_SEEED_I2C_96x96 )
     oled_buff_size = oled_buff_size / 2 ;
   else
+#endif
     oled_buff_size = oled_buff_size / 8;
 
   // De-Allocate memory for OLED buffer if any
@@ -380,14 +389,16 @@ void ArduiPi_OLED::begin( void )
   }
   else
   {
+#ifdef SEEED_I2C
     if (oled_type == OLED_SEEED_I2C_96x96 )
     {
       multiplex = 0x5F;
       compins   = 0x12;
       contrast  = 0x53;
     }
-    // So 128x64
     else
+    // So 128x64
+#endif
     {
       multiplex = 0x3F;
       compins   = 0x12;
@@ -411,12 +422,15 @@ void ArduiPi_OLED::begin( void )
     precharge  = 0xF1;
   }
   
+#ifdef SEEED_I2C
   if (oled_type == OLED_SEEED_I2C_96x96 )
     sendCommand(SSD1327_Set_Command_Lock, 0x12); // Unlock OLED driver IC MCU interface from entering command. i.e: Accept commands
+#endif
   
   sendCommand(SSD_Display_Off);                    
   sendCommand(SSD_Set_Muliplex_Ratio, multiplex); 
   
+#ifdef SEEED_I2C
   if (oled_type == OLED_SEEED_I2C_96x96 )
   {
     sendCommand(SSD1327_Set_Display_Clock_Div, 0x01); 
@@ -464,7 +478,9 @@ void ArduiPi_OLED::begin( void )
     grayH= 0xF0;
     grayL= 0x0F;
   }
-  else if (oled_type == OLED_SH1106_I2C_128x64)
+  else
+#endif // SEEED
+  if (oled_type == OLED_SH1106_I2C_128x64)
   {
     sendCommand(SSD1306_Set_Lower_Column_Start_Address|0x02); /*set lower column address*/
     sendCommand(SSD1306_Set_Higher_Column_Start_Address);     /*set higher column address*/
@@ -524,6 +540,7 @@ void ArduiPi_OLED::begin( void )
   usleep(100000);
 }
 
+#ifdef SEEED_I2C
 // Only valid for Seeed 96x96 OLED
 void ArduiPi_OLED::setGrayLevel(uint8_t grayLevel)
 {
@@ -572,6 +589,12 @@ void ArduiPi_OLED::putSeedString(const char *String)
         putSeedChar(*String++);
     }
 }
+#else
+void ArduiPi_OLED::setGrayLevel(uint8_t grayLevel) {}
+void ArduiPi_OLED::setSeedTextXY(unsigned char Row, unsigned char Column) {setCursor(Row,Column);}
+void ArduiPi_OLED::putSeedChar(char C) {write(C);}
+void ArduiPi_OLED::putSeedString(const char *String) {print(String);}
+#endif // SEEED
 
 void ArduiPi_OLED::setBrightness(uint8_t Brightness)
 {
@@ -585,7 +608,12 @@ void ArduiPi_OLED::invertDisplay(uint8_t i)
   if (i) 
     sendCommand(SSD_Inverse_Display);
   else 
-    sendCommand(oled_type==OLED_SEEED_I2C_96x96 ? SSD1327_Normal_Display : SSD1306_Normal_Display);
+    sendCommand(
+#ifdef SEEED_I2C
+                oled_type==OLED_SEEED_I2C_96x96 ?
+                SSD1327_Normal_Display :
+#endif
+                SSD1306_Normal_Display);
 }
 
 void ArduiPi_OLED::sendCommand(uint8_t c) 
@@ -793,12 +821,14 @@ void ArduiPi_OLED::sendData(uint8_t c)
 void ArduiPi_OLED::display(void) 
 {
 
+#ifdef SEEED_I2C
   if (oled_type == OLED_SEEED_I2C_96x96 )
   {
     sendCommand(SSD1327_Set_Row_Address   , 0x00, 0x5F);
     sendCommand(SSD1327_Set_Column_Address, 0x08, 0x37);
   }
   else
+#endif
   {
     sendCommand(SSD1306_Set_Lower_Column_Start_Address  | 0x0); // low col = 0
     sendCommand(SSD1306_Set_Higher_Column_Start_Address | 0x0); // hi col = 0

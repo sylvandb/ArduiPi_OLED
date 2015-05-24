@@ -403,7 +403,8 @@ int main(int argc, char **argv)
   display.clearDisplay();   // clears the screen  buffer
   display.display();   		// display it (clear display)
 
-	if (opts.oled == 5)
+#ifdef SEEED_I2C
+	if (opts.oled == OLED_SEEED_I2C_96x96)
 	{
 		// showing on this display is very slow (the driver need to be optimized)
 		sleep_divisor = 4;
@@ -416,10 +417,9 @@ int main(int argc, char **argv)
 		}
 		
 		sleep(2);
-
 	}
-
   display.clearDisplay();
+#endif
 
   // draw many lines
   testdrawline();

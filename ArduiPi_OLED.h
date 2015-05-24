@@ -28,14 +28,18 @@ All text above, and the splash screen must be included in any redistribution
 
 #include "./Adafruit_GFX.h"
 
+//#define SEEED_I2C
+
 
 // Oled supported display types
 #define OLED_ADAFRUIT_SPI_128x32  0
 #define OLED_ADAFRUIT_SPI_128x64  1
 #define OLED_ADAFRUIT_I2C_128x32  2
 #define OLED_ADAFRUIT_I2C_128x64  3
+#ifdef SEEED_I2C
 #define OLED_SEEED_I2C_128x64     4
 #define OLED_SEEED_I2C_96x96      5
+#endif
 #define OLED_SH1106_I2C_128x64    6
 
 #define OLED_LAST_OLED            7 /* always last type, used in code to end array */
@@ -71,7 +75,9 @@ extern const char * oled_type_str[];
 // Address for 128x32 is 0x3C
 // Address for 128x32 is 0x3D (default) or 0x3C (if SA0 is grounded)
 
+#ifdef SEEED_I2C
 #define SEEED_I2C_ADDRESS   0x3C /* 011110+SA0+RW - 0x3C or 0x3D */
+#endif
 
 #define SH1106_I2C_ADDRESS   0x3C
 
@@ -161,6 +167,7 @@ extern const char * oled_type_str[];
 =========================================================================*/
 #define SSD1308_Normal_Display  0xA6
 
+#ifdef SEEED_I2C
 /*=========================================================================
     SSD1327 Displays
     -----------------------------------------------------------------------
@@ -175,6 +182,7 @@ extern const char * oled_type_str[];
 #define SSD1327_Set_Row_Address     0x75
 
 #define SSD1327_Set_Row_Address     0x75
+#endif
 
 /*=========================================================================
     SH1106 Displays
