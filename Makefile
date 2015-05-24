@@ -29,6 +29,7 @@ CCFLAGS=-Ofast -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s
 # make all
 # reinstall the library after each recompilation
 all: ArduiPi_OLED install
+library: ArduiPi_OLED
 
 # Make the library
 ArduiPi_OLED: ArduiPi_OLED.o Adafruit_GFX.o bcm2835.o 

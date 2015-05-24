@@ -40,6 +40,10 @@ All text above, and the splash screen below must be included in any redistributi
 #include "./seedfont.c"
 
 
+const char * oled_type_str[] = OLED_TYPE_STRINGS;
+
+
+
 inline boolean ArduiPi_OLED::isSPI(void) {
   return (cs != -1 ? true : false);
 }
@@ -518,20 +522,19 @@ void ArduiPi_OLED::setSeedTextXY(unsigned char Row, unsigned char Column)
 
 void ArduiPi_OLED::putSeedChar(char C)
 {
-    if(C < 32 || C > 127) //Ignore non-printable ASCII characters. This can be modified for multilingual font.
-    {
-        C=' '; //Space
-    } 
+    // Use SPACE for non-printable ASCII characters.
+    // This can be modified for multilingual font.
+    unsigned ci= (C < 32 || C > 127) ? 0 : C - 32;
 
-    for(char i=0;i<8;i=i+2)
+    for(unsigned i=0;i<8;i=i+2)
     {
-        for(char j=0;j<8;j++)
+        for(unsigned j=0;j<8;j++)
         {
             // Character is constructed two pixel at a time using vertical mode from the default 8x8 font
-            char c=0x00;
-            char bit1=( seedfont[C-32][i]   >> j) & 0x01;  
-            char bit2=( seedfont[C-32][i+1] >> j) & 0x01;
-           // Each bit is changed to a nibble
+            unsigned c=0x00;
+            unsigned bit1=( seedfont[ci][i]   >> j) & 0x01;
+            unsigned bit2=( seedfont[ci][i+1] >> j) & 0x01;
+            // Each bit is changed to a nibble
             c|=(bit1)?grayH:0x00;
             c|=(bit2)?grayL:0x00;
             sendData(c);
@@ -541,11 +544,9 @@ void ArduiPi_OLED::putSeedChar(char C)
 
 void ArduiPi_OLED::putSeedString(const char *String)
 {
-    unsigned char i=0;
-    while(String[i])
+    while(*String)
     {
-        putSeedChar( String[i]);     
-        i++;
+        putSeedChar(*String++);
     }
 }
 

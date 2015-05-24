@@ -54,16 +54,16 @@
 
 #define OLED_LAST_OLED            7 /* always last type, used in code to end array */
 
-
-static const char * oled_type_str[] = {
-    "Adafruit SPI 128x32",
-    "Adafruit SPI 128x64",
-    "Adafruit I2C 128x32",
-    "Adafruit I2C 128x64",
-    "Seeed I2C 128x64",
-    "Seeed I2C 96x96",
-    "SH1106 I2C 128x64"
-};
+extern const char * oled_type_str[];
+#define OLED_TYPE_STRINGS { \
+    "Adafruit SPI 128x32",  \
+    "Adafruit SPI 128x64",  \
+    "Adafruit I2C 128x32",  \
+    "Adafruit I2C 128x64",  \
+    "Seeed I2C 128x64",     \
+    "Seeed I2C 96x96",      \
+    "SH1106 I2C 128x64",    \
+}
 
 // Arduino Compatible type
 typedef uint8_t boolean;
@@ -73,7 +73,7 @@ typedef uint8_t byte;
 #define _BV(bit) (1 << (bit))
 
 // GCC Missing
-#define max(a,b) (a>b?a:b)
-#define min(a,b) (a<b?a:b)
+#define max(a,b) ((a)>(b)?(a):(b))
+#define min(a,b) ((a)<(b)?(a):(b))
 
 #endif
