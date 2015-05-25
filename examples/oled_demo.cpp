@@ -172,7 +172,7 @@ void writeRaw(uint8_t c) {
   int16_t y = x / display.width();
   x %= display.width();
 
-  display.drawChar(x, y, c, WHITE, WHITE, 1);
+  display.drawChar(x, y, c, WHITE, BLACK, 1);
 
   // GFX has no advanceCursor
   x += 6;
@@ -187,7 +187,7 @@ void writeRaw(uint8_t c) {
 void testdrawchar(void) {
   int16_t y = 0;
   display.setTextSize(1);
-  display.setTextColor(WHITE);
+  display.setTextColor(WHITE, BLACK);
   display.setCursor(0, 0);
 
   for (uint16_t i=0; i < 256; i++) {
@@ -202,11 +202,17 @@ void testdrawchar(void) {
       if (y >= (display.height() / 8)) {
         sleep(2);
         y = 0;
-        display.clearDisplay();
         display.setCursor(0, 0);
       }
     }
   }
+  // blank the rest of and next line
+  y = (display.width() / 6) * 2;
+  y -= 256 % y - 1;
+  while (y-- > 0)
+    display.write(' ');
+  display.display();
+  sleep(2);
 }
 
 
